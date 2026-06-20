@@ -3,16 +3,16 @@ package woff2
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"slices"
+	"strings"
 
 	"github.com/pgaskin/go-woff2/internal"
 )
 
 //go:generate docker build --platform amd64 --progress plain --output . src
-
-// TODO: can we get real error messages like the woff2 cli?
 
 type Params struct {
 	ExtendedMetadata string
@@ -66,10 +66,7 @@ func Encode(ttf []byte, params *Params) ([]byte, error) {
 	}
 	n, ok := x.m.Xwoff2_encode(int32(p), int32(uint32(len(ttf))), int32(op), int32(on), int32(m), int32(mn), bq, tr)
 	if ok == 0 {
-		if x.e != nil {
-			return nil, x.e
-		}
-		return nil, errors.New("woff2 encode failed")
+		return nil, x.fail("woff2 encode failed")
 	}
 	ob, err := x.mem(op, uint32(n))
 	if err != nil {
@@ -86,10 +83,7 @@ func DecodeLength(woff2 []byte) (int, error) {
 	}
 	n := x.m.Xwoff2_decode_size(int32(p), int32(uint32(len(woff2))))
 	if n == 0 {
-		if x.e != nil {
-			return 0, x.e
-		}
-		return 0, errors.New("woff2 decode failed")
+		return 0, x.fail("woff2 decode failed")
 	}
 	return int(n), nil
 }
@@ -105,10 +99,7 @@ func Decode(w interface {
 	}
 	r := x.m.Xwoff2_decode(int32(p), int32(uint32(len(woff2))))
 	if r == 0 {
-		if x.e != nil {
-			return x.e
-		}
-		return errors.New("woff2 decode failed")
+		return x.fail("woff2 decode failed")
 	}
 	return nil
 }
@@ -146,6 +137,17 @@ type instance struct {
 	w writer
 	m *internal.Module
 	e error
+	r strings.Builder // captured stderr
+}
+
+func (x *instance) fail(msg string) error {
+	if x.e != nil {
+		return x.e
+	}
+	if out := strings.TrimSpace(x.r.String()); out != "" {
+		return fmt.Errorf("%s (%q)", msg, out)
+	}
+	return errors.New(msg)
 }
 
 func newInstance(w writer) *instance {
@@ -219,6 +221,14 @@ func (x *instance) Xwrite(ptr, n int32) int32 {
 		return 0
 	}
 	return 1
+}
+
+func (x *instance) Xwrite_err(ptr, n int32) {
+	b, err := x.mem(uint32(ptr), uint32(n))
+	if err != nil {
+		return
+	}
+	x.r.Write(b)
 }
 
 func (x *instance) Xwrite_at(ptr, off, n int32) int32 {

@@ -57,8 +57,13 @@ CXXFLAGS := \
 # errno without including <cerrno>, so force-include it
 CXXFLAGS += -include cerrno
 
+# FONT_COMPRESSION_BIN enables woff2's human-readable error messages on stderr
+# (FONT_COMPRESSION_DEBUG makes FONT_COMPRESSION_FAILURE() also print the
+# failing file:line, which is remapped by the -ffile-prefix-map flags)
 WOFF2_FLAGS := \
-	-Iwoff2/src
+	-Iwoff2/src \
+	-DFONT_COMPRESSION_BIN \
+	-DFONT_COMPRESSION_DEBUG
 
 BROTLI_FLAGS := \
 	-Ibrotli/c/include

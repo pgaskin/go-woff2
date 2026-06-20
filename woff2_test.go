@@ -87,6 +87,8 @@ func TestInvalid(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				if out, err := Encode(in, nil); err == nil {
 					t.Fatalf("Encode: got %d bytes, wanted error", len(out))
+				} else {
+					t.Logf("%v", err)
 				}
 			})
 		}
@@ -95,10 +97,15 @@ func TestInvalid(t *testing.T) {
 		for name, in := range inputs {
 			t.Run(name, func(t *testing.T) {
 				if n, err := DecodeLength(in); err == nil {
+					// note: this doesn't validate the input, so there may be
+					// some more complex cases where this returns nil on an
+					// invalid font, but DecodeBytes returns an error
 					t.Fatalf("DecodeLength: got %d bytes, wanted error", n)
 				}
 				if out, err := DecodeBytes(in); err == nil {
 					t.Fatalf("DecodeBytes: got %d bytes, wanted error", len(out))
+				} else {
+					t.Logf("%v", err)
 				}
 			})
 		}

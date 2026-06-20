@@ -13,6 +13,9 @@ extern bool woff2_write(const void *buf, size_t n);
 __attribute__((__import_module__("env"),__import_name__(("write_at"))))
 extern bool woff2_write_at(const void *buf, size_t offset, size_t n);
 
+__attribute__((__import_module__("env"),__import_name__(("write_err"))))
+extern void woff2_write_err(const void *buf, size_t n);
+
 class WOFF2WrapperOut : public woff2::WOFF2Out {
 public:
   WOFF2WrapperOut() {};
@@ -89,11 +92,17 @@ extern "C" size_t woff2_encode_size_max(const uint8_t *data, size_t length, cons
 }
 
 // no-op fd_write (referenced by stdio and abort)
-extern "C" int32_t __imported_wasi_snapshot_preview1_fd_write(int32_t, int32_t iovs, int32_t iovs_len, int32_t nwritten) {
+extern "C" int32_t __imported_wasi_snapshot_preview1_fd_write(int32_t fd, int32_t iovs, int32_t iovs_len, int32_t nwritten) {
     struct iovec_t { uint32_t buf; uint32_t len; };
     const iovec_t *v = (const iovec_t *)(uintptr_t)iovs;
     uint32_t total = 0;
-    for (int32_t i = 0; i < iovs_len; i++) total += v[i].len;
+    for (int32_t i = 0; i < iovs_len; i++) {
+        if (fd == 2 && v[i].len > 0) {
+            // forward stderr to catch FONT_COMPRESSION_DEBUG/FONT_COMPRESSION_BIN messages
+            woff2_write_err((const void *)(uintptr_t)v[i].buf, v[i].len);
+        }
+        total += v[i].len;
+    }
     *(uint32_t *)(uintptr_t)nwritten = total;
     return 0;
 }
