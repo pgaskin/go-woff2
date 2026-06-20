@@ -14,12 +14,19 @@ import (
 
 //go:generate docker build --platform amd64 --progress plain --output . src
 
+// Params configures WOFF2 encoding.
 type Params struct {
+	// ExtendedMetadata is an optional XML metadata block to embed in the
+	// output.
 	ExtendedMetadata string
-	BrotliQuality    int
-	AllowTransforms  bool
+	// BrotliQuality is the Brotli compression level from 0 to 11.
+	BrotliQuality int
+	// AllowTransforms enables the WOFF2 glyf and loca table transforms.
+	AllowTransforms bool
 }
 
+// EncodeMaxLength returns an upper bound on the size of the WOFF2 output for
+// the given TTF/OTF font and params.
 func EncodeMaxLength(ttf []byte, params *Params) (int, error) {
 	x := newInstance(nil)
 	p, err := x.copy(ttf)
@@ -37,6 +44,8 @@ func EncodeMaxLength(ttf []byte, params *Params) (int, error) {
 	return int(x.m.Xwoff2_encode_size_max(int32(p), int32(uint32(len(ttf))), int32(m), int32(mn))), nil
 }
 
+// Encode compresses a TTF/OTF font into WOFF2. If params is nil, defaults are
+// used.
 func Encode(ttf []byte, params *Params) ([]byte, error) {
 	x := newInstance(nil)
 	p, err := x.copy(ttf)
@@ -75,6 +84,8 @@ func Encode(ttf []byte, params *Params) ([]byte, error) {
 	return slices.Clone(ob), nil
 }
 
+// DecodeLength returns the size of the decoded TTF/OTF font for the given WOFF2
+// input. It may not always return an error for invalid input.
 func DecodeLength(woff2 []byte) (int, error) {
 	x := newInstance(nil)
 	p, err := x.copy(woff2)
@@ -88,6 +99,7 @@ func DecodeLength(woff2 []byte) (int, error) {
 	return int(n), nil
 }
 
+// Decode decompresses a WOFF2 font and writes the resulting TTF/OTF to w.
 func Decode(w interface {
 	io.Writer
 	io.WriterAt
@@ -104,6 +116,7 @@ func Decode(w interface {
 	return nil
 }
 
+// DecodeBytes decompresses a WOFF2 font and returns the resulting TTF/OTF.
 func DecodeBytes(woff2 []byte) ([]byte, error) {
 	var b buffer
 	if err := Decode(&b, woff2); err != nil {
