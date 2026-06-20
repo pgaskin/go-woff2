@@ -1,0 +1,10 @@
+.cache
+*.o
+*.out
+*.wasm
+*.txt
+brotli
+woff2
+cover
+compile_flags.txt
+compile_commands.json

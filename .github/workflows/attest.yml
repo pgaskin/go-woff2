@@ -1,0 +1,27 @@
+name: Attest woff2 build
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - internal/*.go
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build --platform amd64 --pull --no-cache --progress plain --output . src
+      - run: git diff --exit-code internal # ensure the build was reproducible
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            internal/woff2.go
+            internal/woff2.dat
