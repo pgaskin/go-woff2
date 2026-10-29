@@ -14,8 +14,8 @@ import (
 )
 
 func main() {
-	mustFetch("google/woff2", "1c69169e9e1811dccd6c54c532fedda300233968", "woff2")
-	mustFetch("google/brotli", "533843e3546cd24c8344eaa899c6b0b681c8d222", "brotli")
+	mustFetch("google/woff2", "7b67e12355fe7da148db5c19d4261f0a498a9537", "woff2")
+	mustFetch("google/brotli", "d89c4b1c52e25ddafe047bc78bbee5c1e24b1809", "brotli")
 }
 
 func mustFetch(repo, commit, dest string) {
