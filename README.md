@@ -8,6 +8,8 @@ Go bindings for woff2 without cgo.
 
 This library wraps a WebAssembly build of [woff2](https://github.com/google/woff2) transpiled to Go using [wasm2go](https://github.com/ncruces/wasm2go).
 
+For convenience, there is also a [woff1 decoder](./woff).
+
 The wasm2go blob is fully [reproducible](./src/Dockerfile) and [verified](https://github.com/pgaskin/go-woff2/attestations).
 
 To have working IDE integration while working on the bindings, use `bear -- make -C src distclean download all CC=/path/to/wasi-sdk/bin/wasm32-wasip1-clang CXX=/path/to/wasi-sdk/bin/wasm32-wasip1-clang++ WASM_OPT=/path/to/binaryen/bin/wasm-opt` to download the woff2/brotli source and generate the `compile_commands.json`.
